@@ -1,0 +1,23 @@
+{
+    "name": "mzm/ssophp",
+    "description": "iLogin SSO client for native PHP applications",
+    "type": "library",
+    "license": "MIT",
+    "version": "1.0.0",
+    "authors": [
+        {
+            "name": "Mohamad Zaki",
+            "email": "mzm@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=8.2",
+        "ext-curl": "*",
+        "ext-json": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "Mzm\\SsoPhp\\": "src/"
+        }
+    }
+}
