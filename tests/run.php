@@ -85,12 +85,12 @@ semak('loginUrl membawa client_id dan state rawak', function () {
 
 semak('callback sah memulangkan data pengguna dan menghantar kelayakan', function () {
     $rekod = null;
-    $sso = klien(200, ['user' => ['email' => 'a@ns.gov.my']], $rekod);
+    $sso = klien(200, ['user' => ['email' => 'a@example.test']], $rekod);
     $state = stateDari($sso->loginUrl());
 
     $user = $sso->handleCallback(['code' => 'kod-1', 'state' => $state]);
 
-    pastikan($user['email'] === 'a@ns.gov.my');
+    pastikan($user['email'] === 'a@example.test');
     pastikan($rekod['url'] === 'https://ilogin.test/api/sso/token');
     pastikan($rekod['form'] === ['client_id' => 'id-1', 'client_secret' => 'rahsia-1', 'code' => 'kod-1']);
     pastikan($rekod['pilihan']['verify_tls'] === true);
@@ -156,7 +156,16 @@ semak('respons tidak dijangka', function () {
 
 semak('konfigurasi tanpa client_secret ditolak', function () {
     try {
-        new IloginClient(['client_id' => 'x']);
+        new IloginClient(['base_url' => 'https://ilogin.test', 'client_id' => 'x']);
+    } catch (InvalidArgumentException $e) {
+        return;
+    }
+    throw new RuntimeException('Tiada ralat');
+});
+
+semak('konfigurasi tanpa base_url ditolak', function () {
+    try {
+        new IloginClient(['client_id' => 'x', 'client_secret' => 'y']);
     } catch (InvalidArgumentException $e) {
         return;
     }

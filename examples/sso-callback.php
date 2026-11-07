@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-// URL fail ini ialah "callback" sistem anda dalam iLogin, cth. https://sistem.ns.gov.my/sso-callback.php
+// URL fail ini ialah "callback" sistem anda dalam iLogin, cth. https://sistem-anda.example/sso-callback.php
 
 require __DIR__ . '/../autoload.php'; // atau vendor/autoload.php jika menggunakan Composer
 

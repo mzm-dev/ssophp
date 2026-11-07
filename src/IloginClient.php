@@ -33,7 +33,7 @@ final readonly class IloginClient
 
     /**
      * @param array{
-     *     base_url?: string,
+     *     base_url: string,
      *     client_id: string,
      *     client_secret: string,
      *     verify_tls?: bool,
@@ -44,13 +44,13 @@ final readonly class IloginClient
      */
     public function __construct(array $config, ?callable $transport = null)
     {
-        foreach (['client_id', 'client_secret'] as $kunci) {
+        foreach (['base_url', 'client_id', 'client_secret'] as $kunci) {
             if (! is_string($config[$kunci] ?? null) || $config[$kunci] === '') {
                 throw new \InvalidArgumentException("Konfigurasi '{$kunci}' diperlukan.");
             }
         }
 
-        $this->baseUrl = rtrim((string) ($config['base_url'] ?? 'https://ilogin.ns.gov.my'), '/');
+        $this->baseUrl = rtrim($config['base_url'], '/');
         $this->clientId = $config['client_id'];
         $this->clientSecret = $config['client_secret'];
         $this->verifyTls = (bool) ($config['verify_tls'] ?? true);
