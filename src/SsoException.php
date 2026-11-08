@@ -27,6 +27,9 @@ class SsoException extends \RuntimeException
     /** Respons iLogin tidak dijangka. */
     public const INVALID_RESPONSE = 6;
 
+    /** SSO dimatikan dalam konfigurasi ('enable' => false), cth. semasa penyelenggaraan iLogin. Paparkan getMessage() (503). */
+    public const DISABLED = 7;
+
     /** Sama ada pengguna patut dihantar semula ke iLogin untuk mencuba lagi. */
     public function bolehCubaSemula(): bool
     {

@@ -154,6 +154,48 @@ semak('respons tidak dijangka', function () {
     }, SsoException::INVALID_RESPONSE);
 });
 
+/** Klien dengan SSO dimatikan. */
+function klienDimatikan(?array &$rekod = null): IloginClient
+{
+    return new IloginClient(
+        ['base_url' => 'https://ilogin.test', 'client_id' => 'id-1', 'client_secret' => 'rahsia-1', 'enable' => false],
+        function ($url, $form, $pilihan) use (&$rekod) {
+            $rekod = compact('url', 'form', 'pilihan');
+
+            return ['status' => 200, 'body' => json_encode(['user' => ['email' => 'a']])];
+        }
+    );
+}
+
+semak('SSO hidup secara lalai', function () {
+    pastikan(klien(200, [])->isEnabled() === true);
+});
+
+semak('SSO dimatikan: loginUrl ditolak tanpa menyimpan state', function () {
+    $sso = klienDimatikan();
+    pastikan($sso->isEnabled() === false);
+
+    jangkaRalat(fn () => $sso->loginUrl(), SsoException::DISABLED);
+    pastikan(! isset($_SESSION['ilogin_sso_state']), 'State tidak patut disimpan');
+});
+
+semak('SSO dimatikan: callback ditolak tanpa memanggil iLogin', function () {
+    $rekod = null;
+    $_SESSION['ilogin_sso_state'] = 'abc';
+    $sso = klienDimatikan($rekod);
+
+    try {
+        $sso->handleCallback(['code' => 'k', 'state' => 'abc']);
+    } catch (SsoException $e) {
+        pastikan($e->getCode() === SsoException::DISABLED);
+        pastikan($e->bolehCubaSemula() === false, 'Tidak boleh cuba semula (elak gelung)');
+        pastikan($rekod === null, 'iLogin tidak patut dipanggil');
+
+        return;
+    }
+    throw new RuntimeException('Tiada ralat');
+});
+
 semak('konfigurasi tanpa client_secret ditolak', function () {
     try {
         new IloginClient(['base_url' => 'https://ilogin.test', 'client_id' => 'x']);

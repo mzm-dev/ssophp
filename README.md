@@ -51,7 +51,24 @@ $sso = new Mzm\SsoPhp\IloginClient([
     'verify_tls' => true,                      // keep true in production
     'timeout' => 15,                           // seconds
     'session_key' => 'ilogin_sso_state',       // $_SESSION key for the state
+    'enable' => filter_var(getenv('SSO_ENABLE') ?: 'true', FILTER_VALIDATE_BOOL), // false during iLogin maintenance
 ]);
+```
+
+### Turning SSO off during iLogin maintenance
+
+Set `SSO_ENABLE=false` (or pass `'enable' => false`). While it is off:
+
+- `isEnabled()` returns `false`. Use it to disable or hide your "Log in with iLogin" button.
+- `loginUrl()`, `redirectToLogin()` and `handleCallback()` throw `SsoException` with code `DISABLED`.
+- Users who are already logged in are not affected.
+
+```php
+<?php if ($sso->isEnabled()): ?>
+    <a href="/sso-login.php">Log masuk dengan iLogin</a>
+<?php else: ?>
+    <button type="button" disabled>iLogin dalam penyelenggaraan</button>
+<?php endif; ?>
 ```
 
 ## Usage
@@ -79,7 +96,11 @@ try {
         $sso->redirectToLogin();
     }
     unset($_SESSION['sso_retry']);
-    http_response_code($e->getCode() === SsoException::ACCESS_DENIED ? 403 : 500);
+    http_response_code(match ($e->getCode()) {
+        SsoException::ACCESS_DENIED => 403,
+        SsoException::DISABLED => 503,
+        default => 500,
+    });
     exit(htmlspecialchars($e->getMessage()));
 }
 unset($_SESSION['sso_retry']);
@@ -119,6 +140,7 @@ Complete examples are in [examples/](examples/).
 | `INVALID_CLIENT` | Wrong client ID or secret | Check the configuration |
 | `CONNECTION` | iLogin unreachable, or TLS failure | Show an error and log it |
 | `INVALID_RESPONSE` | Unexpected response | Log it |
+| `DISABLED` | SSO is turned off (`'enable' => false`) | Show the message (503) |
 
 `bolehCubaSemula()` returns `true` for `STATE_MISMATCH` and `INVALID_GRANT`.
 

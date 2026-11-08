@@ -23,7 +23,11 @@ try {
     }
 
     unset($_SESSION['sso_cuba_semula']);
-    http_response_code($e->getCode() === SsoException::ACCESS_DENIED ? 403 : 500);
+    http_response_code(match ($e->getCode()) {
+        SsoException::ACCESS_DENIED => 403,
+        SsoException::DISABLED => 503,
+        default => 500,
+    });
     echo htmlspecialchars($e->getMessage());
     exit;
 }

@@ -15,4 +15,12 @@ if (! empty($_SESSION['user_id'])) {
     exit;
 }
 
-(new IloginClient(require __DIR__ . '/config.php'))->redirectToLogin();
+$sso = new IloginClient(require __DIR__ . '/config.php');
+
+if (! $sso->isEnabled()) {
+    http_response_code(503);
+    echo 'Log masuk melalui Sistem iLogin ditutup sementara untuk penyelenggaraan. Sila cuba lagi kemudian.';
+    exit;
+}
+
+$sso->redirectToLogin();

@@ -28,6 +28,8 @@ final readonly class IloginClient
 
     private string $sessionKey;
 
+    private bool $enable;
+
     /** @var (Closure(string, array<string, string>, array{verify_tls: bool, timeout: int}): array{status: int, body: string})|null */
     private ?Closure $transport;
 
@@ -38,7 +40,8 @@ final readonly class IloginClient
      *     client_secret: string,
      *     verify_tls?: bool,
      *     timeout?: int,
-     *     session_key?: string
+     *     session_key?: string,
+     *     enable?: bool
      * } $config
      * @param callable|null $transport Untuk ujian sahaja. Lalai: cURL.
      */
@@ -56,12 +59,24 @@ final readonly class IloginClient
         $this->verifyTls = (bool) ($config['verify_tls'] ?? true);
         $this->timeout = (int) ($config['timeout'] ?? 15);
         $this->sessionKey = (string) ($config['session_key'] ?? 'ilogin_sso_state');
+        $this->enable = (bool) ($config['enable'] ?? true);
         $this->transport = $transport === null ? null : Closure::fromCallable($transport);
     }
 
-    /** URL log masuk iLogin. State disimpan dalam $_SESSION. */
+    /** Sama ada SSO dihidupkan. Gunakan untuk memaparkan atau mematikan butang log masuk iLogin. */
+    public function isEnabled(): bool
+    {
+        return $this->enable;
+    }
+
+    /**
+     * URL log masuk iLogin. State disimpan dalam $_SESSION.
+     *
+     * @throws SsoException DISABLED jika SSO dimatikan.
+     */
     public function loginUrl(): string
     {
+        $this->pastikanAktif();
         $this->pastikanSession();
 
         $state = bin2hex(random_bytes(20));
@@ -96,6 +111,7 @@ final readonly class IloginClient
      */
     public function handleCallback(?array $query = null): array
     {
+        $this->pastikanAktif();
         $query ??= $_GET;
         $this->pastikanSession();
 
@@ -174,6 +190,14 @@ final readonly class IloginClient
         }
 
         return ['status' => $status, 'body' => (string) $body];
+    }
+
+    /** @throws SsoException */
+    private function pastikanAktif(): void
+    {
+        if (! $this->enable) {
+            throw new SsoException('Log masuk melalui Sistem iLogin ditutup sementara untuk penyelenggaraan. Sila cuba lagi kemudian.', SsoException::DISABLED);
+        }
     }
 
     private function pastikanSession(): void
